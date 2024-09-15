@@ -1,35 +1,97 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+typedef struct Node {
+  char symb;
+  struct Node *next;
+  struct Node *rear;
+} Node;
+
+
+Node* init (char symbol) {
+  Node *root = (Node *)malloc(sizeof(Node));
+  root->next = root;
+  root->rear = root;
+  root->symb = symbol;
+  return root;
+}
+
+void add (Node *root, char symbol) {
+  Node *cur = (Node *)malloc(sizeof(Node));
+  root->rear->next = cur;
+  cur->rear = root->rear;
+  root->next->rear = cur;
+  root->rear = cur;
+  cur->next = root;
+  cur->symb = symbol;
+}
+
+void output (FILE *f, Node *root, char symbol, bool flag) {
+  if (!flag) {
+    fprintf(f, " ");
+  }
+  while (root->symb != '0') {
+    fprintf(f, "%c", root->symb);
+    root = root->next;
+  }
+}
+
+void destruct (Node *root) {
+  while (root->symb != '0') {
+    Node *tmp = root;
+    root = root->next;
+    free(tmp);
+  }
+}
+
+void change (Node *root, int size) {
+  int cnt = 0;
+  while (cnt < size) {
+    root = root->next;
+    ++cnt;
+  }
+  root->rear->next = root->next;
+  root->next->rear = root->rear;
+  free(root);
+}
 
 int main(void) {
-  char *str;
-  str = (char *) malloc(101 * sizeof(char));
-  scanf("%s", str);
-  int mas[1000];
-  for (int i = 0; i < 1000; i++)
-    mas[i] = 0;
-
-  int cnt = 0;
-  for (int i = 0; i < strlen(str) - 2; i++) {
-    for (int j =  i + 1; j < strlen(str) - 1; j++) {
-      for (int k = j + 1; k < strlen(str); k++) {
-        int a1, a2, a3;
-        a1 = 100 * (str[i] - '0');
-        a2 = 10 * (str[j] - '0');
-        a3 = str[k] - '0';
-        if ((a1 + a2 + a3) < 100) 
-          continue;
-        if (mas[a1 + a2 + a3] == 0) {
-          mas[a1 + a2 + a3] = 1;
-          cnt++;
-        }
-      }
+  FILE *f_in, *f_out;
+  f_in = fopen("words.in", "r");
+  f_out = fopen("words.out", "w");
+  char symbol = '0';
+  bool flag = true;
+  while (symbol != '.') {
+    int len = 0;
+    Node *root;
+    root = init('0');
+    if (symbol != '0') {
+      add(root, symbol);
+      ++len;
     }
+    while ((symbol = fgetc(f_in)) != ' ') {
+      if (symbol == '.') {
+        break;
+      }
+      add(root, symbol);
+      ++len;
+    }
+    if (len % 2 == 1 && len > 1) {
+      change(root, len / 2 + 1);
+    }
+    if (len > 1) {
+      output(f_out, root->next, symbol, flag);
+      flag = false;
+    }
+    while (symbol == ' ') {
+      symbol = fgetc(f_in);
+    }
+    destruct(root->next);
+    free(root);
   }
-
-  printf("%d", cnt);
-  free(str);
+  fprintf(f_out, ".");
 
   return 0;
 }

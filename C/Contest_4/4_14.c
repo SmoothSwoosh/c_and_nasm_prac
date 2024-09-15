@@ -1,45 +1,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+void swap (char *a, char *b) {
+  char tmp = *a;
+  *a = *b;
+  *b = tmp;
+}
+
+void reversing (char *arr, size_t len) {
+  for (size_t i = 0; i < len / 2; ++i) {
+    swap(&arr[i], &arr[len - i - 1]);
+  }
+}
 
 int main(void) {
-  char *s;
-  s = (char *)malloc((1e6 + 1) * sizeof(char));
-  scanf("%s", s);
-
-  int cnt_even = 0, cnt_odd = 0;
-  for (int i = 1; i <= strlen(s); i++) {
-    if (s[i - 1] == 'A') {
-      if (i % 2 == 0) 
-        cnt_even++;
-      else
-        cnt_odd++;
-    }
-  }
-
-  int cnt_tmp_even = 0, cnt_tmp_odd = 0;
-  int cnt_most_tmp_even = 0, cnt_most_tmp_odd = 0;
-
-  for (int i = 1; i <= strlen(s); i++) {
-    if (s[i - 1] == 'B') {
-      cnt_most_tmp_even = cnt_tmp_even + (cnt_odd - cnt_tmp_odd);
-      cnt_most_tmp_odd = cnt_tmp_odd + (cnt_even - cnt_tmp_even);
-    } else {
-      if (i % 2 == 0) {
-        cnt_most_tmp_even = cnt_tmp_even + (cnt_odd - cnt_tmp_odd);
-        cnt_most_tmp_odd = cnt_tmp_odd + (cnt_even - cnt_tmp_even - 1);
-        cnt_tmp_even++;
-      } else {
-        cnt_most_tmp_even = cnt_tmp_even + (cnt_odd - cnt_tmp_odd - 1);
-        cnt_most_tmp_odd = cnt_tmp_odd + (cnt_even - cnt_tmp_even);
-        cnt_tmp_odd++;
+  FILE *f_in, *f_out;
+  f_in = fopen("matrix.in", "rb");
+  f_out = fopen("trace.out", "wb");
+  char *n = (char *) malloc (2 * sizeof(char));
+  char *number = (char *) malloc (4 * sizeof(char));
+  long long answer = 0;
+  fread(n, 2 * sizeof(char), 1, f_in);
+  reversing(n, 2);
+  short int cursor = *(short int *)n;
+  for (int i = 0; i < cursor; ++i) {
+    for (int j = 0; j < cursor; ++j) {
+      fread(number, 4 * sizeof(char), 1, f_in);
+      reversing(number, 4);
+      int cur = *(int *)number;
+      if (i == j) {
+        answer += (int)cur;
       }
     }
-    if (cnt_most_tmp_even == cnt_most_tmp_odd)
-      printf("%d ", i);  
   }
-
-  free(s);
+  char *ans = (char *)&answer;
+  reversing(ans, 8);
+  fwrite(ans, 8, 1, f_out);
+  fclose(f_in);
+  fclose(f_out);
+  free(n);
+  free(number);
 
   return 0;
 }

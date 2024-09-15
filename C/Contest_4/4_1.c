@@ -1,76 +1,82 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-const int mod = 1791791791;
-const int p = 97;
-
-int min (int a, int b) {
-  if (a < b)
-    return a;
-  return b;
-}
-
-long long get_hash(long long *arr, long long *pp, int i, int j) {
-  return (arr[j + 1] + mod - (pp[j - i + 1] * arr[i]) % mod) % mod;
-}
+#include <stdbool.h>
 
 int main(void) {
-  char *s, *s1;
-  s = (char *)malloc((1e6 + 1) * sizeof(char));
-  s1 = (char *)malloc((1e6 + 1) * sizeof(char));
-  scanf("%s", s);
-  scanf("%s", s1);
-  int d = strlen(s), d1 = strlen(s1);
-  long long p_pow[d];
-  long long p_pow1[d1];
-
-  p_pow[0] = 1;
-  for (int i = 1; i < d; i++) {
-    p_pow[i] = p_pow[i - 1] * p;
-    p_pow[i] %= mod;
+  FILE *f_in, *f_out;
+  f_in = fopen("input.txt", "r");
+  f_out = fopen("output.txt", "w");
+  bool prev = false, check = false;
+  long long W = 0, S = 0, P = 0;
+  char c = fgetc(f_in);
+  while (c == '\n' || c == ' ') {
+    c = fgetc(f_in);
   }
-
-  p_pow1[0] = 1;
-  for (int i = 1; i < d1; i++) {
-    p_pow1[i] = p_pow1[i - 1] * p;
-    p_pow1[i] %= mod;
-  }
-
-  long long h[d + 1];
-  h[0] = 0;
-  for (int i = 1; i < (d + 1); i++)
-    h[i] = ((h[i - 1] * p) % mod + s[i - 1] - 'a' + 1) % mod;
-
-  long long h1[d1 + 1];
-  h1[0] = 0;
-  for (int i = 1; i < (d1 + 1); i++)
-    h1[i] = ((h1[i - 1] * p) % mod + s1[i - 1] - 'a' + 1) % mod;
-
-  int mx = 0;
-  for (int i = 0; i < min(d, d1); i++) {
-    long long hh = get_hash(h, p_pow, 0, i), h2 = get_hash(h1, p_pow1, (d1 - 1) - i, d1 - 1);
-    if (hh == h2) {
-      if (mx < (i + 1)) {
-        mx = i + 1;
-      }
+  prev = true;
+  while (c != EOF) {
+    if (!prev) {
+      c = fgetc(f_in);
+    }
+    if (!(c == '\n' || c == ' ' || c == '.' || c == '-')) {
+      check = true;
+    }
+    switch (c) {
+      case '.':
+        while ((c = fgetc(f_in)) == ' ') {
+          continue;
+        }
+        int cnt = 0;
+        if (c == '\n') {
+          ++cnt;
+        }
+        while (c == '\n' || c == ' ') {
+          c = fgetc(f_in);
+          if (c == '\n') {
+            ++cnt;
+          }
+        }
+        if (cnt > 1 || c == EOF) {
+          ++P;
+        }
+        prev = true;
+        if (check) {
+          ++W;
+        }
+        ++S;
+        break;
+      case '-':
+        c = fgetc(f_in);
+        while (c == ' ' || c == '\n') {
+          c = fgetc(f_in);
+        }
+        prev = true;
+        break;
+      case ' ':
+        if (check) {
+          ++W;
+        }
+        c = fgetc(f_in);
+        while (c == ' ' || c == '\n') {
+          c = fgetc(f_in);
+          continue;
+        }
+        prev = true;
+        break;
+      case '\n':
+        if (check) {
+          ++W;
+        }
+        break;
+      default:
+        prev = false;
+        break;
     }
   }
 
-  printf("%d ", mx);
-  mx = 0;
-
-  for (int i = 0; i < min(d, d1); i++) {
-    long long hh = get_hash(h, p_pow, d - 1 - i, d - 1), h2 = get_hash(h1, p_pow1, 0, i);
-    if (hh == h2) {
-      if (mx < (i + 1)) {
-        mx = i + 1;
-      }
-    }
-  }
-  printf("%d", mx);
-  free(s);
-  free(s1);
+  fprintf(f_out, "%lld %lld %lld", W, S, P);
+  fclose(f_in);
+  fclose(f_out);
 
   return 0;
 }

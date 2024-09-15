@@ -1,71 +1,131 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdbool.h>
 
-const int BASE = 131;
-const int MOD = 1e9 + 7;
- 
-long long h[2000002];
-long long powers[2000002];
+struct List {
+  int x, items;
+  struct List *next;
+};
 
-long long quick_pow(long long a, long long b) {
-  long long r = 1;
-  while (b) {
-    if (b & 1)
-      r = (r * a) % MOD;
-    a = (a * a) % MOD;
-    b >>= 1;
+struct List *rear;
+
+struct List * init (int num) {
+  struct List *l;
+  l = (struct List *)malloc(sizeof(struct List));
+  l->x = num;
+  l->next = NULL;
+  l->items = 1;
+  rear = l;
+  return l;
+}
+
+void push (struct List *l, int num) {
+  struct List *tmp;
+  tmp = (struct List *)malloc(sizeof(struct List));
+  l->next = tmp;
+  ++l->items;
+  tmp->x = num;
+  tmp->next = NULL;
+  tmp->items = l->items;
+  rear = tmp;
+}
+
+int numbers (struct List *l) {
+  return l->items;
+}
+
+void destruct (struct List *l) {
+  struct List *tmp;
+  while (l != NULL) {
+    tmp = l;
+    l = tmp->next;
+    free(tmp);
   }
-  return r;
 }
- 
-long long get_hash(int left, int right) {
-  return ((h[right] - h[left - 1] + MOD) * powers[left - 1]) % MOD;
+
+void output (FILE *f, struct List *l) {
+  while (l != NULL) {
+    fprintf(f, "%d ", l->x);
+    l = l->next;
+  }
 }
+
+struct List *MergeSortedList(struct List *lst1, struct List *lst2) 
+{ 
+	struct List *result = NULL; 
+	if (lst1 == NULL) 
+		return (lst2); 
+	else if (lst2 == NULL) 
+		return (lst1); 
+	if (lst1->x <= lst2->x) { 
+		result = lst1; 
+		result->next = MergeSortedList(lst1->next, lst2); 
+	} 
+	else { 
+		result = lst2; 
+		result->next = MergeSortedList(lst1, lst2->next); 
+	} 
+	return result; 
+} 
+
+void SplitList(struct List *root, struct List **first, struct List **rear) 
+{ 
+	struct List *start; 
+	struct List *end; 
+	end =root; 
+	start = root->next; 
+
+	while (start != NULL) { 
+		start = start->next; 
+		if (start != NULL) { 
+			end = end->next; 
+			start = start->next; 
+		} 
+	} 
+
+	*first = root; 
+	*rear = end->next; 
+	end->next = NULL; 
+} 
+
+void MergeSort(struct List **thead) 
+{ 
+	struct List *head = *thead; 
+	struct List *first; 
+	struct List *second; 
+	if ((head == NULL) || (head->next == NULL)) { 
+		return; 
+	} 
+	SplitList(head, &first, &second); 
+	MergeSort(&first); 
+	MergeSort(&second); 
+	*thead = MergeSortedList(first, second); 
+} 
 
 int main(void) {
-  char *s;
-  s = (char *)malloc((4000002) * sizeof(char));
-  scanf("%s", s);
-  char *tmp;
-  tmp = (char *)malloc((2000001) * sizeof(char));
-  strcpy(tmp, s);
-  strcat(s, tmp);
-  int n = strlen(s);
-  long long p = 1;
-  for (int i = 0; i < n; i++) {
-    powers[i] = quick_pow(p, MOD - 2);
-    p *= 131;
-    p %= MOD;
-  }
-
-  p = 1;
-  h[0] = 0;
-  for (int i = 0; i < n; i++) {
-    h[i + 1] = (h[i] + p * (s[i] - 'a')) % MOD;
-    p *= 131;
-    p %= MOD;
-  }
-
-  n >>= 1;
-  int k = 1;
-  for (int i = 2; i <= n; i++) {
-    int left = 0, right = n - 1;
-    while (left <= right) {
-      int mid = (left + right) >> 1;
-      if (get_hash(i, i + mid) == get_hash(k, k + mid))
-        left = mid + 1;
-      else
-        right = mid - 1;
+  FILE *f_in, *f_out;
+  f_in = fopen("input.txt", "r");
+  f_out = fopen("output.txt", "w");
+  struct List *l;
+  l = (struct List *) malloc (sizeof(struct List));
+  int x = 0, index = 0;
+  while (fscanf(f_in, "%d", &x) == 1) {
+    if (index == 0) {
+      l = init(x);
+      ++index;
     }
-    if (left <= n - 1)
-      if (s[i + left - 1] < s[k + left - 1])
-        k = i;
+    else {
+      push(rear, x);
+    }
   }
-  for (int i = k - 1; i < (k - 1) + n; i++)
-    printf("%c", s[i]);
+  if (numbers(l) != 0) {
+    MergeSort(&l);
+    output(f_out, l);
+  }
 
-  free(s);
-  free(tmp);
+  fclose(f_in);
+  fclose(f_out);
+  destruct(l);
+
   return 0;
 }

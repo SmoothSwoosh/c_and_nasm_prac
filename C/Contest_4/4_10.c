@@ -1,77 +1,90 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-const int mod = 1791791791;
-const int p = 97;
+struct Node {
+  int value, next, rear;
+};
 
-int min (int a, int b) {
-  if (a < b)
-    return a;
-  return b;
+struct Node *root;
+struct Node *last;
+struct Node *numbers[100002];
+
+struct Node * init_list (void) {
+  struct Node *cur;
+  cur = (struct Node *)malloc(sizeof(struct Node));
+  last = (struct Node *)malloc(sizeof(struct Node));
+  last->value = 0;
+  last->rear = 0;
+  last->next = 0;
+  cur->value = 0;
+  cur->next = 0;
+  cur->rear = 0;
+  return cur;
 }
 
-long long get_hash(long long *arr, long long *pp, int i, int j) {
-  return (arr[j + 1] + mod - (pp[j - i + 1] * arr[i]) % mod) % mod;
+void destruct (int n) {
+  free(root);
+  free(last);
+  for (int i = 0; i <= n; ++i) {
+    free(numbers[i]);
+  }
+}
+
+void push (int num) {
+  struct Node *cur;
+  cur = (last->value != 0) ? last : root;
+  cur->next = num;
+  numbers[num]->value = num;
+  numbers[num]->next = 0;
+  numbers[num]->rear = cur->value;
+  last = numbers[num];
+}
+
+void swap (struct Node *a, struct Node *b) {
+  numbers[a->rear]->next = b->next;
+  numbers[b->next]->rear = a->rear;
+  numbers[root->next]->rear = b->value;
+  b->next = root->next;
+  a->rear = 0;
+  root->next = a->value;
+}
+
+void output (FILE *f_out) {
+  struct Node *cur = numbers[root->next];
+  while (cur->value != 0) {
+    fprintf(f_out, "%d ", cur->value);
+    cur = numbers[cur->next];
+  }
 }
 
 int main(void) {
-  char *s, *s1;
-  s = (char *)malloc((1e6 + 1) * sizeof(char));
-  s1 = (char *)malloc((1e6 + 1) * sizeof(char));
-  scanf("%s", s);
-  scanf("%s", s1);
-  int d = strlen(s), d1 = strlen(s1);
-  long long p_pow[d];
-  long long p_pow1[d1];
+  FILE *f_in, *f_out;
+  f_in = fopen("input.txt", "r");
+  f_out = fopen("output.txt", "w");
+  int n, m, a, b;
+  fscanf(f_in, "%d %d", &n, &m);
 
-  p_pow[0] = 1;
-  for (int i = 1; i < d; i++) {
-    p_pow[i] = p_pow[i - 1] * p;
-    p_pow[i] %= mod;
+  root = init_list();
+  for (int i = 0; i < n + 1; ++i) {
+    numbers[i] = (struct Node *)malloc(sizeof(struct Node));
   }
 
-  p_pow1[0] = 1;
-  for (int i = 1; i < d1; i++) {
-    p_pow1[i] = p_pow1[i - 1] * p;
-    p_pow1[i] %= mod;
+  for (int x = 1; x <= n; ++x) {
+    push(x);
   }
 
-  long long h[d + 1];
-  h[0] = 0;
-  for (int i = 1; i < (d + 1); i++)
-    h[i] = ((h[i - 1] * p) % mod + s[i - 1] - 'a' + 1) % mod;
-
-  long long h1[d1 + 1];
-  h1[0] = 0;
-  for (int i = 1; i < (d1 + 1); i++)
-    h1[i] = ((h1[i - 1] * p) % mod + s1[i - 1] - 'a' + 1) % mod;
-
-  int mx = 0;
-  for (int i = 0; i < min(d, d1); i++) {
-    long long hh = get_hash(h, p_pow, 0, i), h2 = get_hash(h1, p_pow1, (d1 - 1) - i, d1 - 1);
-    if (hh == h2) {
-      if (mx < (i + 1)) {
-        mx = i + 1;
-      }
+  for (int i = 0; i < m; ++i) {
+    fscanf(f_in, "%d %d", &a, &b);
+    if (n == 0 || numbers[a]->rear == 0) {
+      continue;
     }
+    swap(numbers[a], numbers[b]);
   }
 
-  printf("%d ", mx);
-  mx = 0;
-
-  for (int i = 0; i < min(d, d1); i++) {
-    long long hh = get_hash(h, p_pow, d - 1 - i, d - 1), h2 = get_hash(h1, p_pow1, 0, i);
-    if (hh == h2) {
-      if (mx < (i + 1)) {
-        mx = i + 1;
-      }
-    }
-  }
-  printf("%d", mx);
-
-  free(s);
-  free(s1);
+  output(f_out);
+  destruct(n - 1);
+  fclose(f_in);
+  fclose(f_out);
 
   return 0;
 }

@@ -1,96 +1,78 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
-int used[10];
-int kk = 1;
+typedef struct Node {
+  struct Node *next;
+  int value;
+} Node;
 
-void zero_char (char* arr[10], int n) {
-  for (int i = 0; i < n; i++)
-    arr[i] = "";
+Node* init (void) {
+  Node *cur = (Node *)malloc(sizeof(Node));
+  cur->value = -1;
+  cur->next = NULL;
+  return cur;
 }
 
-void zero_int (int *arr) {
-  for (int i = 0; i < 10; i++)
-    arr[i] = 0;
-}
-
-void rec (char *towns[10], int k, int n, char *str) {
-  if (k > kk) {
-    kk = k;
+void push (Node *root, int value) {
+  Node *cur = (Node *)malloc(sizeof(char));
+  while (root->next != NULL) {
+    root = root->next;
   }
-  for (int i = 0; i < n; i++) {
-    int d2 = strlen(str);
-    if (used[i] == 0 && towns[i][0] == str[d2 - 2]) {
-      //printf("%c%c ", towns[i][0], str[d2 - 2]);  
-      used[i] = 1;
-      rec(towns, k + 1, n, towns[i]);
-      used[i] = 0;
+  root->next = cur;
+  cur->value = value;
+}
+
+bool in_list (Node *root, int value) {
+  while (root != NULL) {
+    if (root->value == value) {
+      return true;
     }
+    root = root->next;
+  }
+  return false;
+}
+
+void output (FILE *f, Node *root_first, Node *root_second) {
+  while (root_first != NULL) {
+    if (!in_list(root_second, root_first->value))
+    fprintf(f, "%d ", root_first->value);
+    root_first = root_first->next;
   }
 }
 
-void output (char *ans[10], int len) {
-  for (int i = 0; i <= len; i++)
-    printf("%s", ans[i]);
-  printf("\n");
+void input (FILE *f, Node *root) {
+  int x = 0;
+  do {
+    fscanf(f, "%d", &x);
+    if (x != -1) {
+      push(root, x);
+    }
+  } while (x != -1);
 }
 
-/*int amount (int *used) {
-  int ans = 0;
-  for (int i = 0; i < 10; i++)
-    ans += used[i];
-  return ans;
-}*/
+void destruct (Node *root) {
+  while (root != NULL) {
+    Node *tmp = root;
+    root = root->next;
+    free(tmp);
+  }
+}
 
 int main(void) {
-  int n = 0, k = 0, k_max = 0, len = 0;
-  scanf("%d%*c", &n);
-  if (n == 0) {
-    printf("0");
-    return 0;
-  }
-  for (int i = 0; i < n; i++)
-    used[i] = 0;
-  
-  char *towns[n];
-  for (int i = 0; i < n; i++)
-    towns[i] = (char *)malloc(21 * sizeof(char));
+  FILE *f_in, *f_out;
+  f_in = fopen("input.txt", "r");
+  f_out = fopen("output.txt", "w");
+  Node *root_first = init();
+  Node *root_second = init();
+  input(f_in, root_first);
+  input(f_in, root_second);
+  output(f_out, root_first->next, root_second);
 
-  for (int i = 0; i < n; i++)
-    fgets(towns[i], 21, stdin);
-
-  char *ans[n];
-  for (int i = 0; i < n; i++) {
-    used[i] = 1;
-    rec(towns, 1, n, towns[i]);
-    //output();
-    //k = amount(used);
-    k = kk;
-    kk = 1;
-    //printf("%d\n", k);
-    if (k == 1 && k_max == 0) {
-      k_max = k;
-      len = 0;
-      ans[len] = towns[i];
-    }
-    else if (k > k_max) {
-      k_max = k;
-      zero_char(ans, len);
-      len = 0;
-      ans[len] = towns[i];
-      //output(ans, len);
-    } else if (k == k_max) {
-      len++;
-      ans[len] = towns[i];
-    }
-    zero_int(used);  
-  }
-
-  printf("%d\n", k_max);
-  output(ans, len);
-  for (int i = 0; i < n; i++)
-    free(towns[i]);
+  destruct(root_first);
+  destruct(root_second);
+  fclose(f_in);
+  fclose(f_out);
 
   return 0;
 }
